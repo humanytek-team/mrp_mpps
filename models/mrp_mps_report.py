@@ -67,12 +67,6 @@ class MrpMpsReport(models.TransientModel):
         else:
             initial = product.qty_available
         # Compute others cells
-        #qty_in = 0
-        #product_in = 0
-        #compromise_qty = 0
-        #point = 0
-        #calc = 0
-        #product_out = 0
         _logger.info('1113333333333333333333333333333333333333333333333333333')
         for p in range(NUMBER_OF_COLS):
             _logger.info('SIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII')
