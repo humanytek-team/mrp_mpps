@@ -193,5 +193,6 @@ class MrpMpsReport(models.TransientModel):
             })
             initial = forecasted
             date = date_to
+        _logger.info(result)
         return result
 
