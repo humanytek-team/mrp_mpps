@@ -6,7 +6,7 @@
         <xpath expr="//tr[@class='start_inventory']" position="after">
             <tr class="incoming_product">
                 <td><span class="fa fa-fw">+</span>Incoming Product</td>
-                <td t-foreach="product[0]" t-as="item" class="text-right">
+                <td t-foreach="product[1]" t-as="item" class="text-right">
                     <t t-esc="format_float(item['product_in'], {'precision': 2})"/>
                 </td>
             </tr>

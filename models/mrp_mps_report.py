@@ -73,7 +73,9 @@ class MrpMpsReport(models.TransientModel):
         #point = 0
         #calc = 0
         #product_out = 0
+        _logger.info('1113333333333333333333333333333333333333333333333333333')
         for p in range(NUMBER_OF_COLS):
+            _logger.info('SIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII')
             if self.period == 'month':
                 date_to = date + relativedelta.relativedelta(months=1)
                 name = date.strftime('%b')
@@ -174,6 +176,7 @@ class MrpMpsReport(models.TransientModel):
 
 #hasta aqui mis cambios
             #forecasted = to_supply - demand + initial - indirect_total
+            _logger.info('222222222222222222222222222222222222222222222222222222')
             result.append({
                 'period': name,
                 'date': date.strftime('%Y-%m-%d'),
