@@ -25,6 +25,8 @@
         </xpath>
 
         <xpath expr="//tr[@class='indirect_demand']" position="replace" />
+        <xpath expr="//button[@class='oe_link pull-right open_forecast_wizard']" position="replace" />
+        <xpath expr="//a[@class='pull-right text-muted open_forecast_wizard']" position="replace" />
 
     </template>
 
