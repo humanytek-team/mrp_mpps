@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="report_inventory_purchase" inherit_id="mrp_mps.report_inventory">
+
+        <xpath expr="//tr[@class='start_inventory']" position="after">
+            <tr class="incoming_product">
+                <td><span class="fa fa-fw">+</span>Incoming Product</td>
+                <td t-foreach="product[1]" t-as="item" class="text-right">
+                    <t t-esc="format_float(item['product_in'], {'precision': 2})"/>
+                </td>
+            </tr>
+            <tr class="compromise_product">
+                <td><span class="fa fa-fw">-</span>Compromise Product</td>
+                <td t-foreach="product[1]" t-as="item" class="text-right">
+                    <t t-esc="format_float(item['compromise_qty'], {'precision': 2})"/>
+                </td>
+            </tr>
+            <tr class="outgoing_product">
+                <td><span class="fa fa-fw">-</span>Outgoing Product</td>
+                <td t-foreach="product[1]" t-as="item" class="text-right">
+                    <t t-esc="format_float(item['product_out'], {'precision': 2})"/>
+                </td>
+            </tr>
+        </xpath>
+
+        <xpath expr="//tr[@class='indirect_demand']" position="replace" />
+
+    </template>
+
+</odoo>
