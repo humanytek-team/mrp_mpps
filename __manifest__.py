@@ -32,7 +32,7 @@
     'version': '1.0.0',
     'depends': ['mrp_mps', 'purchase'],
     'data': [
-        'report/mrp_mps_report_templates.xml'
+        #'report/mrp_mps_report_templates.xml'
     ],
     'demo': [
     ],
