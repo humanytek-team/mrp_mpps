@@ -7,7 +7,7 @@
             <tr class="incoming_product">
                 <td><span class="fa fa-fw">+</span>Incoming Product</td>
                 <td t-foreach="product[1]" t-as="item" class="text-right">
-                    <!--<t t-esc="format_float(item['product_in'], {'precision': 2})"/>-->
+                    <t t-esc="format_float(item['product_in'], {'precision': 2})"/>
                 </td>
             </tr>
             <tr class="compromise_product">
