@@ -196,3 +196,22 @@ class MrpMpsReport(models.TransientModel):
         _logger.info(result)
         return result
 
+    @api.model
+    def get_html(self, domain=[]):
+        res = self.search([], limit=1)
+        if not res:
+            res = self.create({})
+        domain.append(['mps_active', '=', True])
+        rcontext = {
+            'products': map(lambda x: (x, res.get_data(x)), self.env['product.product'].search(domain, limit=20)),
+            'nb_periods': NUMBER_OF_COLS,
+            'company': self.env.user.company_id,
+            'format_float': self.env['ir.qweb.field.float'].value_to_html,
+        }
+        _logger.info('nnnnnnnnnnnnnnnnnnnnnuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu')
+        _logger.info(rcontext)
+        result = {
+            'html': self.env.ref('mrp_mps.report_inventory').render(rcontext),
+            'report_context': {'nb_periods': NUMBER_OF_COLS, 'period': res.period},
+        }
+        return result
