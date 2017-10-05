@@ -13,13 +13,13 @@
             <tr class="compromise_product">
                 <td><span class="fa fa-fw">-</span>Compromise Product</td>
                 <td t-foreach="product[1]" t-as="item" class="text-right">
-                    <!--<t t-esc="format_float(item['compromise_qty'], {'precision': 2})"/>-->
+                    <t t-esc="format_float(item['compromise_qty'], {'precision': 2})"/>
                 </td>
             </tr>
             <tr class="outgoing_product">
                 <td><span class="fa fa-fw">-</span>Outgoing Product</td>
                 <td t-foreach="product[1]" t-as="item" class="text-right">
-                    <!--<t t-esc="format_float(item['product_out'], {'precision': 2})"/>-->
+                    <t t-esc="format_float(item['product_out'], {'precision': 2})"/>
                 </td>
             </tr>
         </xpath>
