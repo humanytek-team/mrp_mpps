@@ -62,10 +62,10 @@ class MrpMpsReport(models.TransientModel):
         elif self.period == 'week':
             date = date - relativedelta.relativedelta(days=date.weekday())
 
-        if date < datetime.datetime.today():
-            initial = product.with_context(to_date=date.strftime('%Y-%m-%d')).qty_available
-        else:
-            initial = product.qty_available
+        #if date < datetime.datetime.today():
+            #initial = product.with_context(to_date=date.strftime('%Y-%m-%d')).qty_available
+        #else:
+        initial = product.qty_available
         # Compute others cells
         _logger.info('1113333333333333333333333333333333333333333333333333333')
         for p in range(NUMBER_OF_COLS):
