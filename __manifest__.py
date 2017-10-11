@@ -30,7 +30,7 @@
     'website': "http://www.humanytek.com",
     'category': 'Purchase',
     'version': '1.0.0',
-    'depends': ['mrp_mps', 'purchase'],
+    'depends': ['mrp_mps', 'purchase', 'sale_date_promised'],
     'data': [
         'report/mrp_mps_report_templates.xml'
     ],

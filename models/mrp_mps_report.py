@@ -23,7 +23,7 @@
 import datetime
 import babel.dates
 from dateutil import relativedelta
-from odoo import api, fields, models, _
+from odoo import api, models, _
 import logging
 _logger = logging.getLogger(__name__)
 
@@ -48,14 +48,11 @@ class MrpMpsReport(models.TransientModel):
         mo_type = self.env.ref('mrp.route_warehouse0_manufacture', raise_if_not_found=False)
         lead_time = 0
         if buy_type and buy_type.id in product.route_ids.ids:
-            _logger.info('LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL')
             lead_time = (product.seller_ids and product.seller_ids[0].delay or 0) + self.env.user.company_id.po_lead
             _logger.info(lead_time)
         if mo_type and mo_type.id in product.route_ids.ids:
             lead_time = product.produce_delay + self.env.user.company_id.manufacturing_lead
         leadtime = date + relativedelta.relativedelta(days=int(lead_time))
-        _logger.info('KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK')
-        _logger.info(leadtime)
         # Take first day of month or week
         if self.period == 'month':
             date = datetime.datetime(date.year, date.month, 1)
@@ -67,9 +64,7 @@ class MrpMpsReport(models.TransientModel):
         #else:
         initial = product.qty_available
         # Compute others cells
-        _logger.info('1113333333333333333333333333333333333333333333333333333')
         for p in range(NUMBER_OF_COLS):
-            _logger.info('SIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII')
             if self.period == 'month':
                 date_to = date + relativedelta.relativedelta(months=1)
                 name = date.strftime('%b')
@@ -106,10 +101,10 @@ class MrpMpsReport(models.TransientModel):
                 to_supply = min(product.mps_max_supply, to_supply)
 
             # Need to compute auto and manual separately as forecasts are still important
-            if mode == 'manual':
-                to_supply = sum(forecasts.filtered(lambda x: x.mode == 'manual').mapped('to_supply'))
-            if proc_dec:
-                to_supply = sum(forecasts.filtered(lambda x: x.procurement_id).mapped('procurement_id').mapped('product_qty'))
+            #if mode == 'manual':
+                #to_supply = sum(forecasts.filtered(lambda x: x.mode == 'manual').mapped('to_supply'))
+            #if proc_dec:
+                #to_supply = sum(forecasts.filtered(lambda x: x.procurement_id).mapped('procurement_id').mapped('product_qty'))
 
 #cambios mios
             qty_in = 0
@@ -118,18 +113,32 @@ class MrpMpsReport(models.TransientModel):
             point = 0
             calc = 0
             product_out = 0
+            compromise_out_qty = 0
+            qty_late_in = 0
             if buy_type and buy_type.id in product.route_ids.ids:
                 timeback = date - relativedelta.relativedelta(days=int(lead_time))
-                _logger.info('oooooooooooooooooooooooooooooooooooooooooooooooo')
-                _logger.info(date)
-                _logger.info(timeback)
-                _logger.info(date_to)
                 for res in result:
                     date_date = datetime.datetime.strptime(res['date'], '%Y-%m-%d').date()
                     date_date_to = datetime.datetime.strptime(res['date_to'], '%Y-%m-%d').date()
 
                     if date_date <= timeback.date() and date_date_to >= timeback.date():
+                        _logger.info('kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk')
+                        _logger.info(date.date())
+                        _logger.info(timeback.date())
+                        _logger.info(date_date_to)
                         qty_in = res['to_supply']
+                    else:
+                        _logger.info('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH')
+                        _logger.info(date.date())
+                        _logger.info(timeback.date())
+                        _logger.info(date_date)
+                        if date_date >= timeback.date():
+
+                            qty_late_in += res['to_supply']
+                            _logger.info('wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww')
+                            _logger.info(res['to_supply'])
+                            _logger.info(qty_late_in)
+                    #DEBO BUSCAR ENTRE timeback.date() y date y suma los res['to_suply']
 
                 #busco los pedidos que estan por llegar en ese periodo de tiempo
                 stock_moves = StockMove.search([
@@ -140,8 +149,6 @@ class MrpMpsReport(models.TransientModel):
                         ('product_id.id', '=', product.id)])
                 for move in stock_moves:
                     product_in += move.product_uom_qty
-                    _logger.info('SIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII')
-                    _logger.info(product_in)
                     product_compromise = ProductCompromise.search([
                                         ('stock_move_in_id.id', '=', move.id)])
                     for compromise in product_compromise:
@@ -154,23 +161,41 @@ class MrpMpsReport(models.TransientModel):
                     ('product_id.id', '=', product.id)])
                 for move_out in stock_move_outs:
                     product_out += move_out.product_uom_qty
-                    _logger.info('kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk')
-                    _logger.info(product_out)
+                    product_out_compromise = ProductCompromise.search([
+                                    ('stock_move_out_id.id', '=', move_out.id)])
+                    for compromise_out in product_out_compromise:
+                        _logger.info('JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ')
+                        compromise_out_qty += compromise_out.qty_compromise
+                        _logger.info(compromise_out_qty)
+
+            _logger.info('DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD')
+            _logger.info(product_out)
+            _logger.info(compromise_out_qty)
+            product_out -= compromise_out_qty
+            _logger.info(product_out)
             forecasted = qty_in - demand + initial - product_out + product_in - compromise_qty
             stock_warehouse = StockWarehouseOrderpoint.search([
                                     ('product_id.id', '=', product.id)])
 
             if stock_warehouse:
                 point = stock_warehouse.product_min_qty
-            calc = forecasted - point
+            _logger.info('ppppppppppppppppppppppppppppppppppppppppppppppppppppppppp')
+            _logger.info(forecasted)
+            _logger.info(point)
+            _logger.info(qty_late_in)
+            calc = forecasted - point + qty_late_in
             if calc < 0:
                 calc = abs(calc)
             else:
                 calc = 0
 
+            #if mode == 'manual':
+                #to_supply = sum(forecasts.filtered(lambda x: x.mode == 'manual').mapped('to_supply'))
+            #if proc_dec:
+            to_supply = calc
+
 #hasta aqui mis cambios
             #forecasted = to_supply - demand + initial - indirect_total
-            _logger.info('222222222222222222222222222222222222222222222222222222')
             result.append({
                 'period': name,
                 'date': date.strftime('%Y-%m-%d'),
@@ -183,8 +208,8 @@ class MrpMpsReport(models.TransientModel):
                 'mode': mode,
                 'state': state,
                 'indirect': indirect_total,
-                #'to_supply': to_supply,
-                'to_supply': calc,
+                'to_supply': to_supply,
+                #'to_supply': calc,
                 'forecasted': forecasted,
                 'route_type': display,
                 'procurement_enable': True if not proc_dec and leadtime >= date else False,
@@ -193,7 +218,6 @@ class MrpMpsReport(models.TransientModel):
             })
             initial = forecasted
             date = date_to
-        _logger.info(result)
         return result
 
     @api.model
@@ -208,8 +232,6 @@ class MrpMpsReport(models.TransientModel):
             'company': self.env.user.company_id,
             'format_float': self.env['ir.qweb.field.float'].value_to_html,
         }
-        _logger.info('nnnnnnnnnnnnnnnnnnnnnuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu')
-        _logger.info(rcontext)
         result = {
             'html': self.env.ref('mrp_mps.report_inventory').render(rcontext),
             'report_context': {'nb_periods': NUMBER_OF_COLS, 'period': res.period},
