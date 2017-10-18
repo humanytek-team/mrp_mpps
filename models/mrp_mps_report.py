@@ -106,7 +106,7 @@ class MrpMpsReport(models.TransientModel):
             #if proc_dec:
                 #to_supply = sum(forecasts.filtered(lambda x: x.procurement_id).mapped('procurement_id').mapped('product_qty'))
 
-#cambios mios
+
             qty_in = 0
             product_in = 0
             compromise_qty = 0
@@ -122,25 +122,11 @@ class MrpMpsReport(models.TransientModel):
                     date_date_to = datetime.datetime.strptime(res['date_to'], '%Y-%m-%d').date()
 
                     if date_date <= timeback.date() and date_date_to >= timeback.date():
-                        _logger.info('kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk')
-                        _logger.info(date.date())
-                        _logger.info(timeback.date())
-                        _logger.info(date_date_to)
                         qty_in = res['to_supply']
                     else:
-                        _logger.info('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH')
-                        _logger.info(date.date())
-                        _logger.info(timeback.date())
-                        _logger.info(date_date)
                         if date_date >= timeback.date():
-
                             qty_late_in += res['to_supply']
-                            _logger.info('wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww')
-                            _logger.info(res['to_supply'])
-                            _logger.info(qty_late_in)
-                    #DEBO BUSCAR ENTRE timeback.date() y date y suma los res['to_suply']
 
-                #busco los pedidos que estan por llegar en ese periodo de tiempo
                 stock_moves = StockMove.search([
                         ('date_expected', '>=', date.strftime('%Y-%m-%d')),
                         ('date_expected', '<=', date_to.strftime('%Y-%m-%d')),
@@ -155,8 +141,8 @@ class MrpMpsReport(models.TransientModel):
                         compromise_qty += compromise.qty_compromise
 
                 stock_move_outs = StockMove.search([
-                    ('raw_material_production_id.sale_id.date_promised','>=',date.strftime('%Y-%m-%d')),
-                    ('raw_material_production_id.sale_id.date_promised','<=',date_to.strftime('%Y-%m-%d')),
+                    ('raw_material_production_id.sale_id.date_promised', '>=', date.strftime('%Y-%m-%d')),
+                    ('raw_material_production_id.sale_id.date_promised', '<=', date_to.strftime('%Y-%m-%d')),
                     ('state', 'not in', ['cancel', 'done']),
                     ('product_id.id', '=', product.id)])
                 for move_out in stock_move_outs:
@@ -164,38 +150,26 @@ class MrpMpsReport(models.TransientModel):
                     product_out_compromise = ProductCompromise.search([
                                     ('stock_move_out_id.id', '=', move_out.id)])
                     for compromise_out in product_out_compromise:
-                        _logger.info('JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ')
                         compromise_out_qty += compromise_out.qty_compromise
-                        _logger.info(compromise_out_qty)
 
-            _logger.info('DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD')
-            _logger.info(product_out)
-            _logger.info(compromise_out_qty)
             product_out -= compromise_out_qty
-            _logger.info(product_out)
             forecasted = qty_in - demand + initial - product_out + product_in - compromise_qty
             stock_warehouse = StockWarehouseOrderpoint.search([
                                     ('product_id.id', '=', product.id)])
 
             if stock_warehouse:
                 point = stock_warehouse.product_min_qty
-            _logger.info('ppppppppppppppppppppppppppppppppppppppppppppppppppppppppp')
-            _logger.info(forecasted)
-            _logger.info(point)
-            _logger.info(qty_late_in)
             calc = forecasted - point + qty_late_in
             if calc < 0:
                 calc = abs(calc)
             else:
                 calc = 0
 
-            #if mode == 'manual':
-                #to_supply = sum(forecasts.filtered(lambda x: x.mode == 'manual').mapped('to_supply'))
-            #if proc_dec:
-            to_supply = calc
+            if mode == 'manual':
+                to_supply = sum(forecasts.filtered(lambda x: x.mode == 'manual').mapped('to_supply'))
+            else:
+                to_supply = calc
 
-#hasta aqui mis cambios
-            #forecasted = to_supply - demand + initial - indirect_total
             result.append({
                 'period': name,
                 'date': date.strftime('%Y-%m-%d'),
