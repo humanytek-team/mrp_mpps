@@ -129,7 +129,7 @@ class MrpMpsReport(models.TransientModel):
 
                 stock_moves = StockMove.search([
                         ('date_expected', '>=', date.strftime('%Y-%m-%d')),
-                        ('date_expected', '<=', date_to.strftime('%Y-%m-%d')),
+                        ('date_expected', '<', date_to.strftime('%Y-%m-%d')),
                         ('picking_type_id.code', '=', 'incoming'),
                         ('state', 'not in', ['cancel', 'done']),
                         ('product_id.id', '=', product.id)])
@@ -142,7 +142,7 @@ class MrpMpsReport(models.TransientModel):
 
                 stock_move_outs = StockMove.search([
                     ('raw_material_production_id.sale_id.date_promised', '>=', date.strftime('%Y-%m-%d')),
-                    ('raw_material_production_id.sale_id.date_promised', '<=', date_to.strftime('%Y-%m-%d')),
+                    ('raw_material_production_id.sale_id.date_promised', '<', date_to.strftime('%Y-%m-%d')),
                     ('state', 'not in', ['cancel', 'done']),
                     ('product_id.id', '=', product.id)])
                 for move_out in stock_move_outs:
