@@ -21,3 +21,5 @@
 ###############################################################################
 
 import mrp_mps_report
+import stock_warehouse
+import procurement

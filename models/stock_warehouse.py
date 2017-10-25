@@ -20,21 +20,13 @@
 #
 ###############################################################################
 
-{
-    'name': "Master Production/Purchase Schedule",
-    'summary': """
-    """,
-    'description': """
-    """,
-    'author': "Humanytek",
-    'website': "http://www.humanytek.com",
-    'category': 'Purchase',
-    'version': '1.0.0',
-    'depends': ['mrp_mps', 'purchase', 'sale_date_promised'],
-    'data': [
-        'report/mrp_mps_report_templates.xml',
-        'view/stock_warehouse_view.xml',
-    ],
-    'demo': [
-    ],
-}
+from odoo import models, fields
+import logging
+_logger = logging.getLogger(__name__)
+
+
+class StockWarehouseOrderpoint(models.Model):
+    _name = "stock.warehouse.orderpoint"
+    _inherit = 'stock.warehouse.orderpoint'
+
+    mps = fields.Boolean('MPS')
