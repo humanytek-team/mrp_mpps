@@ -23,7 +23,7 @@
 import datetime
 import babel.dates
 from dateutil import relativedelta
-from odoo import api, models, _
+from odoo import api, models, _, fields
 import logging
 _logger = logging.getLogger(__name__)
 
@@ -37,6 +37,8 @@ class MrpMpsReport(models.TransientModel):
     @api.multi
     def get_data(self, product):
         StockMove = self.env['stock.move']
+        StockQuant = self.env['stock.quant']
+        MrpMpsLocation = self.env['mrp.mps.location']
         ProductCompromise = self.env['product.compromise']
         StockWarehouseOrderpoint = self.env['stock.warehouse.orderpoint']
         result = []
@@ -62,7 +64,27 @@ class MrpMpsReport(models.TransientModel):
         #if date < datetime.datetime.today():
             #initial = product.with_context(to_date=date.strftime('%Y-%m-%d')).qty_available
         #else:
-        initial = product.qty_available
+
+        mrp_mps_locations = MrpMpsLocation.search([])
+        list_location = []
+        len_location = len(mrp_mps_locations)
+        cont = 1
+        for mrp_mps_location in mrp_mps_locations:
+            tuple_location = ('location_id', '=', mrp_mps_location.location_id.id)
+            if cont < len_location:
+                list_location.append('|')
+            list_location.append(tuple_location)
+            cont += 1
+        initial = 0
+        if len(list_location) > 0:
+            domain_quant = [('product_id', '=', product.id)] + list_location
+            stock_quants = StockQuant.search(domain_quant)
+
+            for quant in stock_quants:
+                initial += quant.qty
+        else:
+            initial = product.qty_available
+
         # Compute others cells
         for p in range(NUMBER_OF_COLS):
             if self.period == 'month':
@@ -106,7 +128,6 @@ class MrpMpsReport(models.TransientModel):
             #if proc_dec:
                 #to_supply = sum(forecasts.filtered(lambda x: x.procurement_id).mapped('procurement_id').mapped('product_qty'))
 
-
             qty_in = 0
             product_in = 0
             compromise_qty = 0
@@ -127,12 +148,26 @@ class MrpMpsReport(models.TransientModel):
                         if date_date >= timeback.date():
                             qty_late_in += res['to_supply']
 
-                stock_moves = StockMove.search([
+                mrp_mps_locations = MrpMpsLocation.search([])
+                list_location = []
+                len_location = len(mrp_mps_locations)
+                cont = 1
+                for mrp_mps_location in mrp_mps_locations:
+                    tuple_location = ('location_dest_id', '=', mrp_mps_location.location_id.id)
+                    if cont < len_location:
+                        list_location.append('|')
+                    list_location.append(tuple_location)
+                    cont += 1
+
+                domain = [
                         ('date_expected', '>=', date.strftime('%Y-%m-%d')),
                         ('date_expected', '<', date_to.strftime('%Y-%m-%d')),
                         ('picking_type_id.code', '=', 'incoming'),
                         ('state', 'not in', ['cancel', 'done']),
-                        ('product_id.id', '=', product.id)])
+                        ('product_id.id', '=', product.id)]
+                domain = domain + list_location
+
+                stock_moves = StockMove.search(domain)
                 for move in stock_moves:
                     product_in += move.product_uom_qty
                     product_compromise = ProductCompromise.search([
@@ -140,11 +175,13 @@ class MrpMpsReport(models.TransientModel):
                     for compromise in product_compromise:
                         compromise_qty += compromise.qty_compromise
 
-                stock_move_outs = StockMove.search([
+                domain2 = [
                     ('raw_material_production_id.sale_id.date_promised', '>=', date.strftime('%Y-%m-%d')),
                     ('raw_material_production_id.sale_id.date_promised', '<', date_to.strftime('%Y-%m-%d')),
                     ('state', 'not in', ['cancel', 'done']),
-                    ('product_id.id', '=', product.id)])
+                    ('product_id.id', '=', product.id)]
+                domain2 = domain2 + list_location
+                stock_move_outs = StockMove.search(domain2)
                 for move_out in stock_move_outs:
                     product_out += move_out.product_uom_qty
                     product_out_compromise = ProductCompromise.search([
@@ -211,3 +248,10 @@ class MrpMpsReport(models.TransientModel):
             'report_context': {'nb_periods': NUMBER_OF_COLS, 'period': res.period},
         }
         return result
+
+
+class MrpMpsLocation(models.Model):
+    _name = "mrp.mps.location"
+
+    location_id = fields.Many2one('stock.location', 'Location', required=True)
+    active = fields.Boolean('Active', default=True)

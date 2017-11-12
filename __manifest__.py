@@ -30,10 +30,12 @@
     'website': "http://www.humanytek.com",
     'category': 'Purchase',
     'version': '1.0.0',
-    'depends': ['mrp_mps', 'purchase', 'sale_date_promised'],
+    'depends': ['mrp_mps', 'purchase', 'sale_date_promised',
+        'product_reserve'],
     'data': [
         'report/mrp_mps_report_templates.xml',
         'view/stock_warehouse_view.xml',
+        'view/mrp_mps_report_view.xml',
     ],
     'demo': [
     ],
