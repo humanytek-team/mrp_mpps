@@ -24,7 +24,14 @@
             </tr>
         </xpath>
 
-        <xpath expr="//tr[@class='indirect_demand']" position="replace" />
+        <xpath expr="//tr[@class='indirect_demand']" position="replace" >
+            <tr class="compromise_product">
+                <td><span class="fa fa-fw">+</span>Product Incomming forecast</td>
+                <td t-foreach="product[1]" t-as="item" class="text-right">
+                    <t t-esc="format_float(item['product_in_forecasted'], {'precision': 2})"/>
+                </td>
+            </tr>
+        </xpath>
         <!--<xpath expr="//button[@class='oe_link pull-right open_forecast_wizard']" position="replace" />
         <xpath expr="//a[@class='pull-right text-muted open_forecast_wizard']" position="replace" />-->
     </template>

@@ -136,6 +136,7 @@ class MrpMpsReport(models.TransientModel):
             product_out = 0
             compromise_out_qty = 0
             qty_late_in = 0
+            band = False
             if buy_type and buy_type.id in product.route_ids.ids:
                 timeback = date - relativedelta.relativedelta(days=int(lead_time))
                 for res in result:
@@ -147,6 +148,9 @@ class MrpMpsReport(models.TransientModel):
                     else:
                         if date_date >= timeback.date():
                             qty_late_in += res['to_supply']
+                        if res['in'] == 1:
+                            qty_late_in = res['to_supply']
+                            band = True
 
                 mrp_mps_locations = MrpMpsLocation.search([])
                 list_location = []
@@ -189,11 +193,19 @@ class MrpMpsReport(models.TransientModel):
                     for compromise_out in product_out_compromise:
                         compromise_out_qty += compromise_out.qty_compromise
 
+            product_in_forecasted = 0
+            prod_in = 0
+            if qty_in > 0 and not band:
+                product_in_forecasted = qty_in + qty_late_in
+                prod_in = 1
+
+
             product_out -= compromise_out_qty
-            forecasted = qty_in - demand + initial - product_out + product_in - compromise_qty
+            forecasted = product_in_forecasted - demand + initial - product_out + product_in - compromise_qty
             stock_warehouse = StockWarehouseOrderpoint.search([
                                     ('product_id.id', '=', product.id)])
-
+            if prod_in == 1:
+                qty_late_in = 0
             if stock_warehouse:
                 point = stock_warehouse.product_min_qty
             calc = forecasted - point + qty_late_in
@@ -207,6 +219,7 @@ class MrpMpsReport(models.TransientModel):
             else:
                 to_supply = calc
 
+            _logger.info('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
             result.append({
                 'period': name,
                 'date': date.strftime('%Y-%m-%d'),
@@ -215,18 +228,24 @@ class MrpMpsReport(models.TransientModel):
                 'product_in': product_in,
                 'product_out': product_out,
                 'compromise_qty': compromise_qty,
+                'product_in_forecasted': product_in_forecasted,
+                'in': prod_in,
                 'demand': demand,
                 'mode': mode,
                 'state': state,
                 'indirect': indirect_total,
                 'to_supply': to_supply,
-                #'to_supply': calc,
                 'forecasted': forecasted,
                 'route_type': display,
                 'procurement_enable': True if not proc_dec and leadtime >= date else False,
                 'procurement_done': proc_dec,
                 'lead_time': leadtime.strftime('%Y-%m-%d'),
             })
+            #_logger.info(result)
+            _logger.info(prod_in)
+            _logger.info(date)
+            _logger.info(date_to)
+
             initial = forecasted
             date = date_to
         return result
