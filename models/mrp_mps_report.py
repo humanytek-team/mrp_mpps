@@ -142,13 +142,12 @@ class MrpMpsReport(models.TransientModel):
                 for res in result:
                     date_date = datetime.datetime.strptime(res['date'], '%Y-%m-%d').date()
                     date_date_to = datetime.datetime.strptime(res['date_to'], '%Y-%m-%d').date()
-
-                    if date_date <= timeback.date() and date_date_to >= timeback.date():
+                    if date_date <= timeback.date() and date_date_to > timeback.date() and res['to_supply'] > 0:
                         qty_in = res['to_supply']
                     else:
                         if date_date >= timeback.date():
                             qty_late_in += res['to_supply']
-                        if res['in'] == 1:
+                        if res['in'] == 1 and date_date >= timeback.date():
                             qty_late_in = res['to_supply']
                             band = True
 
@@ -195,7 +194,11 @@ class MrpMpsReport(models.TransientModel):
 
             product_in_forecasted = 0
             prod_in = 0
+            _logger.info(band)
+            _logger.info(qty_in)
             if qty_in > 0 and not band:
+                _logger.info(qty_in)
+                _logger.info(qty_late_in)
                 product_in_forecasted = qty_in + qty_late_in
                 prod_in = 1
 
@@ -219,7 +222,6 @@ class MrpMpsReport(models.TransientModel):
             else:
                 to_supply = calc
 
-            _logger.info('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
             result.append({
                 'period': name,
                 'date': date.strftime('%Y-%m-%d'),
@@ -243,9 +245,12 @@ class MrpMpsReport(models.TransientModel):
             })
             #_logger.info(result)
             _logger.info(prod_in)
-            _logger.info(date)
-            _logger.info(date_to)
-
+            _logger.info(product_in_forecasted)
+            _logger.info(prod_in)
+            _logger.info(to_supply)
+            _logger.info(forecasted)
+            _logger.info(product_in)
+            _logger.info(product_out)
             initial = forecasted
             date = date_to
         return result
