@@ -168,7 +168,7 @@ class MrpMpsReport(models.TransientModel):
                         ('picking_type_id.code', '=', 'incoming'),
                         ('state', 'not in', ['cancel', 'done']),
                         ('product_id.id', '=', product.id)]
-                domain = domain + list_location
+                #domain = domain + list_location
 
                 stock_moves = StockMove.search(domain)
                 for move in stock_moves:
@@ -183,7 +183,7 @@ class MrpMpsReport(models.TransientModel):
                     ('raw_material_production_id.sale_id.date_promised', '<', date_to.strftime('%Y-%m-%d')),
                     ('state', 'not in', ['cancel', 'done']),
                     ('product_id.id', '=', product.id)]
-                domain2 = domain2 + list_location
+                #domain2 = domain2 + list_location
                 stock_move_outs = StockMove.search(domain2)
                 for move_out in stock_move_outs:
                     product_out += move_out.product_uom_qty
