@@ -174,7 +174,8 @@ class MrpMpsReport(models.TransientModel):
                 for move in stock_moves:
                     product_in += move.product_uom_qty
                     product_compromise = ProductCompromise.search([
-                                        ('stock_move_in_id.id', '=', move.id)])
+                                        ('stock_move_in_id.id', '=', move.id),
+                                        ('state', '=', 'assigned')])
                     for compromise in product_compromise:
                         compromise_qty += compromise.qty_compromise
 
