@@ -193,6 +193,25 @@ class MrpMpsReport(models.TransientModel):
                     for compromise_out in product_out_compromise:
                         compromise_out_qty += compromise_out.qty_compromise
 
+                #CALCULAR SI ES LA PRIMERA SEMANA O PRIMER DIA CALCULAR LO DE COMIENZOS DE MES
+                if self.period == 'day' or self.period == 'week':
+                    if p == 0:
+                        date_old = datetime.datetime(date.year, date.month, 1)
+                        domain3 = [
+                            ('raw_material_production_id.sale_id.date_promised', '>=', date_old.strftime('%Y-%m-%d')),
+                            ('raw_material_production_id.sale_id.date_promised', '<', date.strftime('%Y-%m-%d')),
+                            ('state', 'not in', ['cancel', 'done']),
+                            ('product_id.id', '=', product.id)]
+                        stock_move_outs = StockMove.search(domain3)
+                        for move_out in stock_move_outs:
+                            product_out += move_out.product_uom_qty
+                            product_out_compromise = ProductCompromise.search([
+                                            ('stock_move_out_id.id', '=', move_out.id)])
+                            for compromise_out in product_out_compromise:
+                                compromise_out_qty += compromise_out.qty_compromise
+
+                #elif self.period == 'week':
+                    #date = date - relativedelta.relativedelta(days=date.weekday())
             product_in_forecasted = 0
             prod_in = 0
             _logger.info(band)
