@@ -92,8 +92,12 @@ class MrpMpsReport(models.TransientModel):
                 name = date.strftime('%b')
                 name = babel.dates.format_date(format="MMM YY", date=date, locale=self._context.get('lang') or 'en_US')
             elif self.period == 'week':
+                #_logger.info('DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD')
+                #_logger.info(date.strftime('%U'))
+                #_logger.info(date)
                 date_to = date + relativedelta.relativedelta(days=7)
-                name = _('Week %s') % date.strftime('%U')
+                #_logger.info(date_to)
+                name = _('Week %s') % date.strftime('%W')
             else:
                 date_to = date + relativedelta.relativedelta(days=1)
                 name = babel.dates.format_date(format="MMM d", date=date, locale=self._context.get('lang') or 'en_US')
@@ -193,7 +197,6 @@ class MrpMpsReport(models.TransientModel):
                     for compromise_out in product_out_compromise:
                         compromise_out_qty += compromise_out.qty_compromise
 
-                #CALCULAR SI ES LA PRIMERA SEMANA O PRIMER DIA CALCULAR LO DE COMIENZOS DE MES
                 if self.period == 'day' or self.period == 'week':
                     if p == 0:
                         date_old = datetime.datetime(date.year, date.month, 1)
