@@ -193,7 +193,8 @@ class MrpMpsReport(models.TransientModel):
                 for move_out in stock_move_outs:
                     product_out += move_out.product_uom_qty
                     product_out_compromise = ProductCompromise.search([
-                                    ('stock_move_out_id.id', '=', move_out.id)])
+                                    ('stock_move_out_id.id', '=', move_out.id),
+                                    ('state', '=', 'assigned')])
                     for compromise_out in product_out_compromise:
                         compromise_out_qty += compromise_out.qty_compromise
 
