@@ -51,7 +51,6 @@ class MrpMpsReport(models.TransientModel):
         lead_time = 0
         if buy_type and buy_type.id in product.route_ids.ids:
             lead_time = (product.seller_ids and product.seller_ids[0].delay or 0) + self.env.user.company_id.po_lead
-            _logger.info(lead_time)
         if mo_type and mo_type.id in product.route_ids.ids:
             lead_time = product.produce_delay + self.env.user.company_id.manufacturing_lead
         leadtime = date + relativedelta.relativedelta(days=int(lead_time))
@@ -60,11 +59,6 @@ class MrpMpsReport(models.TransientModel):
             date = datetime.datetime(date.year, date.month, 1)
         elif self.period == 'week':
             date = date - relativedelta.relativedelta(days=date.weekday())
-
-        #if date < datetime.datetime.today():
-            #initial = product.with_context(to_date=date.strftime('%Y-%m-%d')).qty_available
-        #else:
-
         mrp_mps_locations = MrpMpsLocation.search([])
         list_location = []
         len_location = len(mrp_mps_locations)
@@ -92,11 +86,7 @@ class MrpMpsReport(models.TransientModel):
                 name = date.strftime('%b')
                 name = babel.dates.format_date(format="MMM YY", date=date, locale=self._context.get('lang') or 'en_US')
             elif self.period == 'week':
-                #_logger.info('DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD')
-                #_logger.info(date.strftime('%U'))
-                #_logger.info(date)
                 date_to = date + relativedelta.relativedelta(days=7)
-                #_logger.info(date_to)
                 name = _('Week %s') % date.strftime('%W')
             else:
                 date_to = date + relativedelta.relativedelta(days=1)
@@ -125,12 +115,6 @@ class MrpMpsReport(models.TransientModel):
             to_supply = max(to_supply, product.mps_min_supply)
             if product.mps_max_supply > 0:
                 to_supply = min(product.mps_max_supply, to_supply)
-
-            # Need to compute auto and manual separately as forecasts are still important
-            #if mode == 'manual':
-                #to_supply = sum(forecasts.filtered(lambda x: x.mode == 'manual').mapped('to_supply'))
-            #if proc_dec:
-                #to_supply = sum(forecasts.filtered(lambda x: x.procurement_id).mapped('procurement_id').mapped('product_qty'))
 
             qty_in = 0
             product_in = 0
@@ -213,16 +197,10 @@ class MrpMpsReport(models.TransientModel):
                                             ('stock_move_out_id.id', '=', move_out.id)])
                             for compromise_out in product_out_compromise:
                                 compromise_out_qty += compromise_out.qty_compromise
-
-                #elif self.period == 'week':
-                    #date = date - relativedelta.relativedelta(days=date.weekday())
             product_in_forecasted = 0
             prod_in = 0
-            _logger.info(band)
-            _logger.info(qty_in)
+
             if qty_in > 0 and not band:
-                _logger.info(qty_in)
-                _logger.info(qty_late_in)
                 product_in_forecasted = qty_in + qty_late_in
                 prod_in = 1
             stock_warehouse = StockWarehouseOrderpoint.search([
@@ -233,13 +211,6 @@ class MrpMpsReport(models.TransientModel):
                 point = stock_warehouse.product_min_qty
 
             if product_in_forecasted > 0:
-                _logger.info('WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW')
-                _logger.info(product_in_forecasted)
-                _logger.info(initial)
-                _logger.info(point)
-                #if product_in_forecasted + initial >= point:
-                    #product_in_forecasted = 0
-                #else:
                 fore = initial - point
                 if fore >= 0:
                     product_in_forecasted = 0
@@ -248,7 +219,6 @@ class MrpMpsReport(models.TransientModel):
 
             product_out -= compromise_out_qty
             forecasted = product_in_forecasted - demand + initial - product_out + product_in - compromise_qty
-
 
             calc = forecasted - point + qty_late_in
             if calc < 0:
@@ -282,14 +252,6 @@ class MrpMpsReport(models.TransientModel):
                 'procurement_done': proc_dec,
                 'lead_time': leadtime.strftime('%Y-%m-%d'),
             })
-            #_logger.info(result)
-            _logger.info(prod_in)
-            _logger.info(product_in_forecasted)
-            _logger.info(prod_in)
-            _logger.info(to_supply)
-            _logger.info(forecasted)
-            _logger.info(product_in)
-            _logger.info(product_out)
             initial = forecasted
             date = date_to
         return result
