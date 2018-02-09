@@ -225,16 +225,31 @@ class MrpMpsReport(models.TransientModel):
                 _logger.info(qty_late_in)
                 product_in_forecasted = qty_in + qty_late_in
                 prod_in = 1
-
-
-            product_out -= compromise_out_qty
-            forecasted = product_in_forecasted - demand + initial - product_out + product_in - compromise_qty
             stock_warehouse = StockWarehouseOrderpoint.search([
                                     ('product_id.id', '=', product.id)])
             if prod_in == 1:
                 qty_late_in = 0
             if stock_warehouse:
                 point = stock_warehouse.product_min_qty
+
+            if product_in_forecasted > 0:
+                _logger.info('WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW')
+                _logger.info(product_in_forecasted)
+                _logger.info(initial)
+                _logger.info(point)
+                #if product_in_forecasted + initial >= point:
+                    #product_in_forecasted = 0
+                #else:
+                fore = initial - point
+                if fore >= 0:
+                    product_in_forecasted = 0
+                else:
+                    product_in_forecasted = abs(fore)
+
+            product_out -= compromise_out_qty
+            forecasted = product_in_forecasted - demand + initial - product_out + product_in - compromise_qty
+
+
             calc = forecasted - point + qty_late_in
             if calc < 0:
                 calc = abs(calc)
