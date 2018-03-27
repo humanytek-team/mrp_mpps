@@ -215,17 +215,22 @@ class MrpMpsReport(models.TransientModel):
                 if fore >= 0:
                     product_in_forecasted = 0
                 else:
-                    product_in_forecasted = abs(fore)
+                    product_in_forecasted = abs(fore - product_out + product_in - compromise_qty - demand)
 
             product_out -= compromise_out_qty
-            forecasted = product_in_forecasted - demand + initial - product_out + product_in - compromise_qty
 
-            calc = forecasted - point + qty_late_in
+            if product_in_forecasted <= 0:
+                #forecasted = product_in_forecasted - demand + initial - product_out + product_in - compromise_qty
+                forecasted = - demand + initial - product_out + product_in - compromise_qty
+                calc = forecasted - point + qty_late_in
+
+            else:
+                forecasted = product_in_forecasted + initial
+                calc = 0
             if calc < 0:
                 calc = abs(calc)
             else:
                 calc = 0
-
             if mode == 'manual':
                 to_supply = sum(forecasts.filtered(lambda x: x.mode == 'manual').mapped('to_supply'))
             else:
